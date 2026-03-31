@@ -132,7 +132,7 @@ export default function OverlayPage() {
 
     setReveal({
       killerName: killer?.name || "Unknown",
-      winners: winners?.map((w) => w.twitch_username).slice(0, 5) || [],
+      winners: winners?.map((w) => w.twitch_username).filter(Boolean).slice(0, 5) || [],
     });
 
     setTimeout(() => {
@@ -168,11 +168,10 @@ export default function OverlayPage() {
 
     setLastResult({
       killerName: killer?.name || "Unknown",
-      winners: winners?.map((w) => w.twitch_username).slice(0, 5) || [],
+      winners: winners?.map((w) => w.twitch_username).filter(Boolean).slice(0, 5) || [],
     });
   }
 
-  // Always listen for round changes, even when there is no active round
   useEffect(() => {
     const roundChannel = supabase
       .channel("round-reveal")
@@ -201,7 +200,6 @@ export default function OverlayPage() {
     };
   }, [supabase]);
 
-  // Listen for guess changes only when there is an active non-resolved round
   useEffect(() => {
     if (!round || round.status === "resolved") return;
 
@@ -236,22 +234,27 @@ export default function OverlayPage() {
   });
 
   const leaderId = sortedKillers[0]?.id;
+  const topVoteCount = sortedKillers.length > 0 ? votes[sortedKillers[0].id] || 0 : 0;
 
   return (
     <main className="min-h-screen bg-transparent text-white p-6">
       {reveal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/95">
-          <div className="absolute inset-0 bg-red-900/30 animate-pulse" />
+          <div className="absolute inset-0 animate-pulse bg-red-900/25" />
           <div className="absolute inset-0 animate-[flicker_0.4s_linear]" />
 
-          <div className="relative text-center space-y-6">
-            <h1 className="text-6xl font-black text-red-500 animate-[slam_0.5s_ease-out]">
+          <div className="relative mx-auto max-w-4xl text-center">
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.5em] text-red-300">
+              Match Result
+            </p>
+
+            <h1 className="mb-6 animate-[slam_0.5s_ease-out] text-6xl font-black text-red-500 drop-shadow-[0_0_18px_rgba(255,0,0,0.45)]">
               KILLER REVEALED
             </h1>
 
             <img
               src={`/killers/${getKillerSlug(reveal.killerName)}.jpg`}
-              className="w-[420px] h-[260px] object-cover rounded-xl mx-auto shadow-[0_0_60px_red]"
+              className="mx-auto mb-6 h-[280px] w-[460px] rounded-2xl object-cover shadow-[0_0_60px_red]"
               onError={(e) => {
                 const target = e.currentTarget;
                 if (!target.src.includes("default.jpg")) {
@@ -260,9 +263,26 @@ export default function OverlayPage() {
               }}
             />
 
-            <h2 className="text-5xl font-black text-green-400">
+            <h2 className="mb-4 text-5xl font-black text-green-400">
               {reveal.killerName}
             </h2>
+
+            {reveal.winners.length > 0 ? (
+              <div className="rounded-2xl border border-green-500/40 bg-green-950/30 px-6 py-4">
+                <p className="mb-2 text-sm font-bold uppercase tracking-[0.35em] text-green-300">
+                  Winners
+                </p>
+                <p className="text-xl font-bold text-green-100">
+                  {reveal.winners.join(", ")}
+                </p>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-red-500/40 bg-red-950/30 px-6 py-4">
+                <p className="text-xl font-bold text-red-300">
+                  No one guessed correctly
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -271,14 +291,18 @@ export default function OverlayPage() {
         <div className="fixed inset-0 z-40 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/70" />
 
-          <div className="relative text-center space-y-4">
-            <h1 className="text-3xl font-black text-red-400">
+          <div className="relative text-center">
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.45em] text-red-300">
+              Last Match
+            </p>
+
+            <h1 className="mb-5 text-3xl font-black text-red-400">
               LAST KILLER
             </h1>
 
             <img
               src={`/killers/${getKillerSlug(lastResult.killerName)}.jpg`}
-              className="w-[300px] mx-auto rounded-lg shadow-[0_0_30px_red]"
+              className="mx-auto mb-4 h-[220px] w-[360px] rounded-xl object-cover shadow-[0_0_30px_red]"
               onError={(e) => {
                 const target = e.currentTarget;
                 if (!target.src.includes("default.jpg")) {
@@ -294,36 +318,64 @@ export default function OverlayPage() {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between mb-6">
-          <h1 className="text-3xl font-black text-red-400">
-            Killer Prediction
-          </h1>
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-6 flex items-center justify-between rounded-2xl border border-red-900/40 bg-black/35 px-6 py-4 backdrop-blur-sm">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.45em] text-red-300">
+              Dead by Daylight
+            </p>
+            <h1 className="mt-1 text-3xl font-black text-red-100">
+              Killer Prediction
+            </h1>
+          </div>
 
-          {round?.status === "open" && (
-            <div className="text-2xl font-bold text-red-300">
-              {formatCountdown(secondsRemaining)}
-            </div>
-          )}
+          <div className="flex items-center gap-5">
+            {round?.status === "open" && (
+              <>
+                <span className="rounded-full border border-green-500/50 bg-green-950/50 px-4 py-2 text-sm font-bold tracking-[0.2em] text-green-300 animate-pulse">
+                  ● ROUND OPEN
+                </span>
+                <div className="rounded-xl border border-red-700/50 bg-red-950/40 px-4 py-2 text-2xl font-black text-red-200">
+                  {formatCountdown(secondsRemaining)}
+                </div>
+              </>
+            )}
+
+            {round?.status === "locked" && (
+              <span className="rounded-full border border-yellow-500/50 bg-yellow-950/50 px-4 py-2 text-sm font-bold tracking-[0.2em] text-yellow-300">
+                ● LOCKED
+              </span>
+            )}
+          </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-5">
-          {sortedKillers.slice(0, 9).map((killer) => {
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+          {sortedKillers.slice(0, 9).map((killer, index) => {
             const voteCount = votes[killer.id] || 0;
             const isLeader = killer.id === leaderId && voteCount > 0;
+            const barPercent =
+              topVoteCount > 0 ? Math.max(8, (voteCount / topVoteCount) * 100) : 0;
 
             return (
               <div
                 key={killer.id}
-                className={`group relative rounded-2xl overflow-hidden border ${
+                className={`group relative overflow-hidden rounded-2xl border ${
                   isLeader
-                    ? "border-green-400 shadow-[0_0_25px_rgba(74,222,128,0.4)] scale-105"
-                    : "border-gray-800"
+                    ? "border-green-400 shadow-[0_0_28px_rgba(74,222,128,0.38)]"
+                    : "border-gray-800/80"
                 }`}
               >
+                {isLeader && (
+                  <div className="absolute right-3 top-3 z-10 rounded-full bg-green-400 px-3 py-1 text-xs font-black tracking-[0.15em] text-black shadow-[0_0_18px_rgba(74,222,128,0.6)]">
+                    #1 LEADER
+                  </div>
+                )}
+
                 <img
                   src={`/killers/${getKillerSlug(killer.name)}.jpg`}
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  className={`absolute inset-0 h-full w-full object-cover transition-transform duration-500 ${
+                    isLeader ? "scale-105" : "group-hover:scale-110"
+                  }`}
                   onError={(e) => {
                     const target = e.currentTarget;
                     if (!target.src.includes("default.jpg")) {
@@ -332,13 +384,38 @@ export default function OverlayPage() {
                   }}
                 />
 
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/10" />
 
-                <div className="relative p-4 h-[180px] flex flex-col justify-end">
-                  <p className="text-lg font-black">{killer.name}</p>
-                  <p className="text-3xl font-black text-red-300">
-                    {voteCount}
-                  </p>
+                <div className="relative flex h-[220px] flex-col justify-between p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="rounded-full bg-black/50 px-3 py-1 text-xs font-bold uppercase tracking-[0.2em] text-gray-300 backdrop-blur-sm">
+                      #{index + 1}
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="mb-1 text-xl font-black text-white drop-shadow-lg">
+                      {killer.name}
+                    </p>
+
+                    <div className="mb-2 flex items-end justify-between gap-3">
+                      <p className="text-4xl font-black text-red-300">
+                        {voteCount}
+                      </p>
+                      <p className="text-xs font-bold uppercase tracking-[0.25em] text-gray-300">
+                        votes
+                      </p>
+                    </div>
+
+                    <div className="h-3 overflow-hidden rounded-full bg-white/10">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          isLeader ? "bg-green-400" : "bg-red-400"
+                        }`}
+                        style={{ width: `${barPercent}%` }}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
             );
