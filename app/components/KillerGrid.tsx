@@ -39,7 +39,7 @@ export default function KillerGrid({
         <div className="text-sm text-gray-400">Select the card. Lock it in.</div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {killers.map((killer) => {
           const isSelected = selectedKillerId === killer.id;
           const voteCount = votes[killer.id] || 0;
@@ -59,11 +59,11 @@ export default function KillerGrid({
                 disabled={isRoundLocked}
                 className="w-full text-left"
               >
-                <div className="mb-4 relative rounded-2xl overflow-hidden border border-gray-800 h-[160px]">
+                <div className="relative mb-4 h-[160px] overflow-hidden rounded-2xl border border-gray-800">
                   <img
                     src={`/killers/${getKillerSlug(killer.name)}.jpg`}
                     alt={killer.name}
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
                     onError={(e) => {
                       const target = e.currentTarget as HTMLImageElement;
                       if (!target.src.includes("default.jpg")) {
@@ -72,7 +72,7 @@ export default function KillerGrid({
                     }}
                   />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent group-hover:from-red-950/70 transition-all duration-300" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent transition-all duration-300 group-hover:from-red-950/70" />
 
                   <div className="absolute bottom-0 left-0 right-0 p-3">
                     <p className="text-lg font-black text-white drop-shadow-lg">
@@ -81,26 +81,26 @@ export default function KillerGrid({
                   </div>
 
                   {isSelected && (
-                    <div className="absolute top-2 right-2 bg-green-500 shadow-[0_0_10px_rgba(74,222,128,0.8)] text-white text-xs px-2 py-1 rounded font-bold">
+                    <div className="absolute right-2 top-2 rounded bg-green-500 px-2 py-1 text-xs font-bold text-white shadow-[0_0_10px_rgba(74,222,128,0.8)]">
                       SELECTED
                     </div>
                   )}
                 </div>
 
-                <div className="flex items-start justify-between gap-3 mb-4">
+                <div className="mb-4 flex items-start justify-between gap-3">
                   <div>
                     <p className="text-lg font-bold uppercase tracking-wide text-white">
                       {killer.name}
                     </p>
-                    <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mt-1">
+                    <p className="mt-1 text-xs uppercase tracking-[0.25em] text-gray-500">
                       Killer Candidate
                     </p>
                   </div>
                 </div>
               </button>
 
-              <div className="rounded-xl border border-gray-800 bg-black/40 p-4 mb-4">
-                <p className="text-xs uppercase tracking-[0.25em] text-gray-500 mb-2">
+              <div className="mb-4 rounded-xl border border-gray-800 bg-black/40 p-4">
+                <p className="mb-2 text-xs uppercase tracking-[0.25em] text-gray-500">
                   Current Votes
                 </p>
                 <p
@@ -120,16 +120,16 @@ export default function KillerGrid({
                     disabled={!isRoundOpen || !viewer || loadingCurrentGuess}
                     className={`w-full rounded-xl py-3 font-black uppercase tracking-widest transition ${
                       !isRoundOpen || !viewer || loadingCurrentGuess
-                        ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+                        ? "cursor-not-allowed bg-gray-800 text-gray-500"
                         : "bg-green-700 text-white hover:bg-green-600 shadow-[0_0_20px_rgba(74,222,128,0.18)]"
                     }`}
                   >
                     {!viewer
                       ? "Connect Twitch First"
-                      : isRoundLocked
-                      ? "Locked"
                       : loadingCurrentGuess
                       ? "Loading..."
+                      : !isRoundOpen
+                      ? "Locked"
                       : "Lock In Guess"}
                   </button>
                 </form>
@@ -140,7 +140,7 @@ export default function KillerGrid({
                   disabled={isRoundLocked}
                   className={`w-full rounded-xl py-3 font-black uppercase tracking-widest transition ${
                     isRoundLocked
-                      ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+                      ? "cursor-not-allowed bg-gray-800 text-gray-500"
                       : "bg-red-900/60 text-red-100 hover:bg-red-800"
                   }`}
                 >

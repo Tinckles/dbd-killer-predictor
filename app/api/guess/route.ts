@@ -19,11 +19,17 @@ export async function POST(request: Request) {
   );
 
   if (!viewerSession) {
-    return NextResponse.redirect(new URL("/?guess=not_signed_in", baseUrl));
+    return NextResponse.redirect(
+      new URL("/?guess=not_signed_in", baseUrl),
+      303
+    );
   }
 
   if (!killerId) {
-    return NextResponse.redirect(new URL("/?guess=missing_data", baseUrl));
+    return NextResponse.redirect(
+      new URL("/?guess=missing_data", baseUrl),
+      303
+    );
   }
 
   const { data: round } = await supabase
@@ -35,11 +41,17 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (!round) {
-    return NextResponse.redirect(new URL("/?guess=no_open_round", baseUrl));
+    return NextResponse.redirect(
+      new URL("/?guess=no_open_round", baseUrl),
+      303
+    );
   }
 
   if (round.status !== "open") {
-    return NextResponse.redirect(new URL("/?guess=locked", baseUrl));
+    return NextResponse.redirect(
+      new URL("/?guess=locked", baseUrl),
+      303
+    );
   }
 
   const { error } = await supabase
@@ -58,13 +70,14 @@ export async function POST(request: Request) {
 
   if (error) {
     console.error("Failed to save browser guess:", error);
-    return NextResponse.redirect(new URL("/?guess=error", baseUrl));
+    return NextResponse.redirect(
+      new URL("/?guess=error", baseUrl),
+      303
+    );
   }
 
   return NextResponse.redirect(
-    new URL(
-      `/?guess=success&killerId=${killerId}`,
-      baseUrl
-    )
+    new URL(`/?guess=success&killerId=${killerId}`, baseUrl),
+    303
   );
 }
